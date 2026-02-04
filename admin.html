@@ -11,7 +11,11 @@ th{background:#333;color:#fff}
 </head>
 
 <body>
-
+<script>
+if(localStorage.getItem("admin")!=="ok"){
+location.href="login.html";
+}
+</script>
 <h2>Dashboard Nilai CBT</h2>
 
 <table id="tbl">
