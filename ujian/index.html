@@ -92,17 +92,23 @@ else selesai();
 }
 
 function selesai(){
-clearInterval(timer);
+  clearInterval(timer);
 
-let nilai=Math.round(score/soal.length*100);
+  let nilai = Math.round(score/soal.length*100);
 
-localStorage.setItem(nama,nilai);
+  // kirim ke Google Form
+  fetch("https://docs.google.com/forms/d/e/1FAIpQLSe72_R-ebHIiLzmRMBIMUlGRFaGCd9bVdMd3iBTO7Ppj8WDZg/formResponse", {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `entry.1077864679=${nama}&entry.1981506209=${nilai}`
+  });
 
-document.getElementById("ujian").style.display="none";
-document.getElementById("hasil").style.display="block";
-document.getElementById("nilai").innerHTML="Nilai "+nama+": "+nilai;
+  document.getElementById("ujian").style.display = "none";
+  document.getElementById("hasil").style.display = "block";
+  document.getElementById("nilai").innerHTML = "Nilai "+nama+": "+nilai;
 }
-
+  
 document.addEventListener("visibilitychange",()=>{
 if(document.hidden) alert("Jangan keluar ujian!");
 });
@@ -111,3 +117,4 @@ if(document.hidden) alert("Jangan keluar ujian!");
 
 </body>
 </html>
+
