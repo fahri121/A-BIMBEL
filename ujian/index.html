@@ -16,8 +16,11 @@ button{padding:10px;width:100%;margin-top:10px}
 
 <div class="box" id="login">
 <h2>Login Ujian</h2>
-<input id="nama" placeholder="Nama siswa" style="width:100%;padding:10px"><br><br>
-<button onclick="mulai()">Mulai</button>
+
+<input id="nis" placeholder="NIS">
+<input id="nama" placeholder="Nama">
+
+<button onclick="login()">Login</button>
 </div>
 
 <div class="box" id="ujian" style="display:none">
@@ -74,6 +77,26 @@ k:["A","B","C","D"].indexOf(c[8].split("</td>")[0].trim())
 
 soal.sort(()=>Math.random()-0.5);
 load();
+
+});
+
+let SISWA=[];
+
+fetch("https://docs.google.com/spreadsheets/d/1LQqh7vJJfh834O-l12qINL0ivm2pE6CLTIaFkjaeJX8/edit?usp=sharing")
+.then(r=>r.text())
+.then(t=>{
+
+let rows=t.split("<tr>").slice(1);
+
+rows.forEach(r=>{
+let c=r.split("<td>");
+if(c.length>2){
+SISWA.push({
+nis:c[1].split("</td>")[0],
+nama:c[2].split("</td>")[0]
+});
+}
+});
 
 });
 
@@ -153,9 +176,33 @@ document.addEventListener("visibilitychange",()=>{
 if(document.hidden) alert("Jangan keluar ujian!");
 });
 
+function login(){
+
+let nis=document.getElementById("nis").value;
+let namaInput=document.getElementById("nama").value;
+
+let ok=false;
+
+SISWA.forEach(s=>{
+if(s.nis==nis && s.nama.toLowerCase()==namaInput.toLowerCase()){
+ok=true;
+nama=s.nama;
+}
+});
+
+if(!ok) return alert("Data siswa tidak ditemukan");
+
+document.documentElement.requestFullscreen();
+
+document.getElementById("login").style.display="none";
+document.getElementById("ujian").style.display="block";
+
+timer=setInterval(countdown,1000);
+}
 </script>
 
 </body>
 </html>
+
 
 
