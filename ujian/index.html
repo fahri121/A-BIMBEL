@@ -1,21 +1,113 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Ujian Online</title>
-<meta name="viewport" content="width=device-width">
+<title>CBT Sekolah</title>
+
+<style>
+body{font-family:Arial;background:#eef2f7;padding:20px}
+.box{max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px}
+button{padding:10px;width:100%;margin-top:10px}
+#timer{color:red;font-weight:bold}
+</style>
 </head>
 
 <body>
 
-<h2>UJIAN ONLINE</h2>
+<div class="box" id="login">
+<h2>Login Ujian</h2>
+<input id="nama" placeholder="Nama siswa" style="width:100%;padding:10px"><br><br>
+<button onclick="mulai()">Mulai</button>
+</div>
+
+<div class="box" id="ujian" style="display:none">
 
 <div id="timer"></div>
+<h3 id="soal"></h3>
+<div id="opsi"></div>
 
-<div id="soal"></div>
+<button onclick="next()">Next</button>
 
-<button onclick="kirim()">Selesai Ujian</button>
+</div>
 
-<script src="script.js"></script>
+<div class="box" id="hasil" style="display:none">
+<h2>Selesai</h2>
+<p id="nilai"></p>
+</div>
+
+<script>
+
+let waktu=300;
+let timer;
+
+let soal=[
+{q:"2+3=?",a:["3","4","5","6"],k:2},
+{q:"Ibukota Indonesia?",a:["Bogor","Jakarta","Depok","Bekasi"],k:1},
+{q:"5x2=?",a:["7","8","10","12"],k:2}
+];
+
+soal.sort(()=>Math.random()-0.5);
+
+let i=0,score=0,nama="";
+
+function mulai(){
+nama=document.getElementById("nama").value;
+if(!nama) return alert("Isi nama!");
+
+document.documentElement.requestFullscreen();
+
+document.getElementById("login").style.display="none";
+document.getElementById("ujian").style.display="block";
+
+timer=setInterval(countdown,1000);
+load();
+}
+
+function countdown(){
+waktu--;
+document.getElementById("timer").innerHTML="Sisa waktu: "+waktu+" detik";
+
+if(waktu<=0){
+selesai();
+}
+}
+
+function load(){
+document.getElementById("soal").innerHTML=soal[i].q;
+
+let h="";
+soal[i].a.forEach((x,n)=>{
+h+=`<label><input type=radio name=j value=${n}> ${x}</label><br>`;
+});
+document.getElementById("opsi").innerHTML=h;
+}
+
+function next(){
+let j=document.querySelector('input[name=j]:checked');
+if(j && j.value==soal[i].k) score++;
+
+i++;
+if(i<soal.length) load();
+else selesai();
+}
+
+function selesai(){
+clearInterval(timer);
+
+let nilai=Math.round(score/soal.length*100);
+
+localStorage.setItem(nama,nilai);
+
+document.getElementById("ujian").style.display="none";
+document.getElementById("hasil").style.display="block";
+document.getElementById("nilai").innerHTML="Nilai "+nama+": "+nilai;
+}
+
+document.addEventListener("visibilitychange",()=>{
+if(document.hidden) alert("Jangan keluar ujian!");
+});
+
+</script>
+
 </body>
 </html>
