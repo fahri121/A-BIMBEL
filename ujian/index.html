@@ -40,15 +40,42 @@ button{padding:10px;width:100%;margin-top:10px}
 let waktu=300;
 let timer;
 
-let soal=[
-{q:"2+3=?",a:["3","4","5","6"],k:2},
-{q:"Ibukota Indonesia?",a:["Bogor","Jakarta","Depok","Bekasi"],k:1},
-{q:"5x2=?",a:["7","8","10","12"],k:2}
-];
-
-soal.sort(()=>Math.random()-0.5);
+let soal=[];
+let MAPEL="IPA"; // ganti mapel
 
 let i=0,score=0,nama="";
+
+fetch("https://docs.google.com/spreadsheets/d/1QnQS13-jb5lwx7VdbcdvxAWaYmsx1G55zy2Yo5r7AJY/edit?usp=sharing")
+.then(r=>r.text())
+.then(t=>{
+
+let rows=t.split("<tr>").slice(1);
+
+rows.forEach(r=>{
+let c=r.split("<td>");
+
+if(c.length>7 && c[1].includes(MAPEL)){
+
+soal.push({
+q:c[2].split("</td>")[0],
+img:c[3].split("</td>")[0],
+a:[
+c[4].split("</td>")[0],
+c[5].split("</td>")[0],
+c[6].split("</td>")[0],
+c[7].split("</td>")[0]
+],
+k:["A","B","C","D"].indexOf(c[8].split("</td>")[0].trim())
+});
+
+}
+
+});
+
+soal.sort(()=>Math.random()-0.5);
+load();
+
+});
 
 function mulai(){
 nama=document.getElementById("nama").value;
@@ -73,8 +100,21 @@ selesai();
 }
 
 function load(){
-document.getElementById("soal").innerHTML=soal[i].q;
 
+let s=soal[i];
+
+let img = s.img ? `<img src="${s.img}" style="max-width:100%"><br>` : "";
+
+document.getElementById("soal").innerHTML=img+s.q;
+
+let h="";
+s.a.forEach((x,n)=>{
+h+=`<label><input type=radio name=j value=${n}> ${x}</label><br>`;
+});
+
+document.getElementById("opsi").innerHTML=h;
+}
+  
 let h="";
 soal[i].a.forEach((x,n)=>{
 h+=`<label><input type=radio name=j value=${n}> ${x}</label><br>`;
@@ -117,4 +157,5 @@ if(document.hidden) alert("Jangan keluar ujian!");
 
 </body>
 </html>
+
 
