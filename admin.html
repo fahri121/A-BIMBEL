@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin CBT</title>
+<style>
+body{font-family:Arial;background:#f2f2f2;padding:20px}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{border:1px solid #ccc;padding:8px;text-align:center}
+th{background:#333;color:#fff}
+</style>
+</head>
+
+<body>
+
+<h2>Dashboard Nilai CBT</h2>
+
+<table id="tbl">
+<tr><th>Nama</th><th>Nilai</th></tr>
+</table>
+
+<script>
+
+fetch("https://docs.google.com/spreadsheets/d/1vmfrH8i8cSUtDYj78DuqdAPSxyXebSdPTE17HZjK8Fk/edit?usp=sharing")
+.then(r=>r.text())
+.then(t=>{
+
+let rows=t.split("<tr>").slice(1);
+
+rows.forEach(r=>{
+let c=r.split("<td>");
+if(c.length>2){
+let nama=c[1].split("</td>")[0];
+let nilai=c[2].split("</td>")[0];
+
+document.getElementById("tbl").innerHTML+=
+`<tr><td>${nama}</td><td>${nilai}</td></tr>`;
+}
+});
+
+});
+
+</script>
+
+</body>
+</html>
