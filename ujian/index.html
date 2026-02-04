@@ -1,208 +1,128 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>CBT Sekolah</title>
-
-<style>
-body{font-family:Arial;background:#eef2f7;padding:20px}
-.box{max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px}
-button{padding:10px;width:100%;margin-top:10px}
-#timer{color:red;font-weight:bold}
-</style>
-</head>
-
-<body>
-
-<div class="box" id="login">
-<h2>Login Ujian</h2>
-
-<input id="nis" placeholder="NIS">
-<input id="nama" placeholder="Nama">
-
-<button onclick="login()">Login</button>
-</div>
-
-<div class="box" id="ujian" style="display:none">
-
-<div id="timer"></div>
-<h3 id="soal"></h3>
-<div id="opsi"></div>
-
-<button onclick="next()">Next</button>
-
-</div>
-
-<div class="box" id="hasil" style="display:none">
-<h2>Selesai</h2>
-<p id="nilai"></p>
-</div>
-
 <script>
 
-let waktu=300;
-let timer;
+let waktu = 300, timer;
+let soal = [], SISWA = [];
+let MAPEL = "IPA";
+let i = 0, score = 0, nama = "";
 
-let soal=[];
-let MAPEL="IPA"; // ganti mapel
-
-let i=0,score=0,nama="";
-
-fetch("https://docs.google.com/spreadsheets/d/1QnQS13-jb5lwx7VdbcdvxAWaYmsx1G55zy2Yo5r7AJY/edit?usp=sharing")
-.then(r=>r.text())
-.then(t=>{
-
-let rows=t.split("<tr>").slice(1);
-
-rows.forEach(r=>{
-let c=r.split("<td>");
-
-if(c.length>7 && c[1].includes(MAPEL)){
-
-soal.push({
-q:c[2].split("</td>")[0],
-img:c[3].split("</td>")[0],
-a:[
-c[4].split("</td>")[0],
-c[5].split("</td>")[0],
-c[6].split("</td>")[0],
-c[7].split("</td>")[0]
-],
-k:["A","B","C","D"].indexOf(c[8].split("</td>")[0].trim())
+/* === AMBIL BANK SOAL === */
+fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSq78zEvEu82Qh8uTNuVDgfeY3FxA09wrjWI00c3no6hPvT0twucsTpB94-hGq1oxY77R6huXF4HGfr/pubhtml")
+.then(r => r.text())
+.then(t => {
+  let rows = t.split("<tr>").slice(1);
+  rows.forEach(row => {
+    let c = row.split("<td>");
+    if (c.length > 8 && c[1].includes(MAPEL)) {
+      soal.push({
+        q: c[2].replace(/<[^>]*>/g, '').trim(),
+        img: c[3].replace(/<[^>]*>/g, '').trim(),
+        a: [
+          c[4].replace(/<[^>]*>/g, '').trim(),
+          c[5].replace(/<[^>]*>/g, '').trim(),
+          c[6].replace(/<[^>]*>/g, '').trim(),
+          c[7].replace(/<[^>]*>/g, '').trim()
+        ],
+        k: ["A", "B", "C", "D"].indexOf(c[8].replace(/<[^>]*>/g, '').trim())
+      });
+    }
+  });
+  soal.sort(() => Math.random() - 0.5);
 });
 
-}
-
+/* === AMBIL DATA SISWA === */
+fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRzq_BK4My4MJkNKZ5GmithzEiXnr2J3oQuK5jFoBAPK1V9OMGP8gf3sof0JzEPNxLBk86ekz2su-2Q/pubhtml")
+.then(r => r.text())
+.then(t => {
+  let rows = t.split("<tr>").slice(1);
+  rows.forEach(row => {
+    let c = row.split("<td>");
+    if (c.length > 2) {
+      SISWA.push({
+        nis: c[1].replace(/<[^>]*>/g, '').trim(),
+        nama: c[2].replace(/<[^>]*>/g, '').trim()
+      });
+    }
+  });
 });
 
-soal.sort(()=>Math.random()-0.5);
-load();
+/* === LOGIN SISWA === */
+function login() {
+  let nisInput = document.getElementById("nis").value.trim();
+  let namaInput = document.getElementById("nama").value.trim();
 
-});
+  if (!nisInput || !namaInput) {
+    return alert("Masukkan NIS dan Nama siswa!");
+  }
 
-let SISWA=[];
+  let valid = SISWA.find(s => s.nis === nisInput && s.nama.toLowerCase() === namaInput.toLowerCase());
+  if (!valid) {
+    return alert("NIS atau Nama tidak terdaftar!");
+  }
 
-fetch("https://docs.google.com/spreadsheets/d/1LQqh7vJJfh834O-l12qINL0ivm2pE6CLTIaFkjaeJX8/edit?usp=sharing")
-.then(r=>r.text())
-.then(t=>{
+  nama = valid.nama;
 
-let rows=t.split("<tr>").slice(1);
+  document.getElementById("login").style.display = "none";
+  document.getElementById("ujian").style.display = "block";
 
-rows.forEach(r=>{
-let c=r.split("<td>");
-if(c.length>2){
-SISWA.push({
-nis:c[1].split("</td>")[0],
-nama:c[2].split("</td>")[0]
-});
-}
-});
-
-});
-
-function mulai(){
-nama=document.getElementById("nama").value;
-if(!nama) return alert("Isi nama!");
-
-document.documentElement.requestFullscreen();
-
-document.getElementById("login").style.display="none";
-document.getElementById("ujian").style.display="block";
-
-timer=setInterval(countdown,1000);
-load();
+  document.documentElement.requestFullscreen();
+  timer = setInterval(countdown, 1000);
+  load();
 }
 
-function countdown(){
-waktu--;
-document.getElementById("timer").innerHTML="Sisa waktu: "+waktu+" detik";
-
-if(waktu<=0){
-selesai();
-}
+/* === TIMER === */
+function countdown() {
+  waktu--;
+  document.getElementById("timer").innerText = "Sisa waktu: " + waktu + " detik";
+  if (waktu <= 0) selesai();
 }
 
-function load(){
+/* === TAMPILKAN SOAL === */
+function load() {
+  let s = soal[i];
+  if (!s) return;
 
-let s=soal[i];
+  let imgHTML = s.img ? `<img src="${s.img}" style="max-width:100%; margin-bottom:10px;">` : "";
+  document.getElementById("soal").innerHTML = imgHTML + s.q;
 
-let img = s.img ? `<img src="${s.img}" style="max-width:100%"><br>` : "";
+  let html = "";
+  s.a.forEach((opsi, idx) => {
+    html += `<label><input type="radio" name="jawab" value="${idx}"> ${opsi}</label><br>`;
+  });
 
-document.getElementById("soal").innerHTML=img+s.q;
-
-let h="";
-s.a.forEach((x,n)=>{
-h+=`<label><input type=radio name=j value=${n}> ${x}</label><br>`;
-});
-
-document.getElementById("opsi").innerHTML=h;
-}
-  
-let h="";
-soal[i].a.forEach((x,n)=>{
-h+=`<label><input type=radio name=j value=${n}> ${x}</label><br>`;
-});
-document.getElementById("opsi").innerHTML=h;
+  document.getElementById("opsi").innerHTML = html;
 }
 
-function next(){
-let j=document.querySelector('input[name=j]:checked');
-if(j && j.value==soal[i].k) score++;
+/* === NEXT SOAL === */
+function next() {
+  let selected = document.querySelector('input[name="jawab"]:checked');
+  if (selected && parseInt(selected.value) === soal[i].k) {
+    score++;
+  }
 
-i++;
-if(i<soal.length) load();
-else selesai();
+  i++;
+  if (i < soal.length) {
+    load();
+  } else {
+    selesai();
+  }
 }
 
-function selesai(){
+/* === SELESAI UJIAN === */
+function selesai() {
   clearInterval(timer);
 
-  let nilai = Math.round(score/soal.length*100);
+  let finalScore = Math.round(score / soal.length * 100);
 
-  // kirim ke Google Form
   fetch("https://docs.google.com/forms/d/e/1FAIpQLSe72_R-ebHIiLzmRMBIMUlGRFaGCd9bVdMd3iBTO7Ppj8WDZg/formResponse", {
     method: "POST",
     mode: "no-cors",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `entry.1077864679=${nama}&entry.1981506209=${nilai}`
+    body: `entry.1077864679=${encodeURIComponent(nama)}&entry.1981506209=${finalScore}`
   });
 
   document.getElementById("ujian").style.display = "none";
   document.getElementById("hasil").style.display = "block";
-  document.getElementById("nilai").innerHTML = "Nilai "+nama+": "+nilai;
+  document.getElementById("nilai").innerText = "Nilai " + nama + ": " + finalScore;
 }
-  
-document.addEventListener("visibilitychange",()=>{
-if(document.hidden) alert("Jangan keluar ujian!");
-});
 
-function login(){
-
-let nis=document.getElementById("nis").value;
-let namaInput=document.getElementById("nama").value;
-
-let ok=false;
-
-SISWA.forEach(s=>{
-if(s.nis==nis && s.nama.toLowerCase()==namaInput.toLowerCase()){
-ok=true;
-nama=s.nama;
-}
-});
-
-if(!ok) return alert("Data siswa tidak ditemukan");
-
-document.documentElement.requestFullscreen();
-
-document.getElementById("login").style.display="none";
-document.getElementById("ujian").style.display="block";
-
-timer=setInterval(countdown,1000);
-}
 </script>
-
-</body>
-</html>
-
-
-
